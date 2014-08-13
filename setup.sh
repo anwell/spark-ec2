@@ -11,7 +11,7 @@ source ec2-variables.sh
 
 # Set hostname based on EC2 private DNS name, so that it is set correctly
 # even if the instance is restarted with a different private DNS name
-PRIVATE_DNS=`wget -q -O - http://instance-data.ec2.internal/latest/meta-data/local-hostname`
+PRIVATE_DNS=`wget -q -O - http://169.254.169.254/latest/meta-data/local-ipv4`
 PUBLIC_DNS=`wget -q -O - http://instance-data.ec2.internal/latest/meta-data/hostname`
 hostname $PRIVATE_DNS
 echo $PRIVATE_DNS > /etc/hostname
@@ -59,11 +59,11 @@ source ./setup-slave.sh
 echo "SSH'ing to master machine(s) to approve key(s)..."
 for master in $MASTERS; do
   echo $master
-  ssh $SSH_OPTS $master echo -n &
+  ssh $SSH_OPTS $SSH_USER@$master echo -n &
   sleep 0.3
 done
-ssh $SSH_OPTS localhost echo -n &
-ssh $SSH_OPTS `hostname` echo -n &
+ssh $SSH_OPTS $SSH_USER@localhost echo -n &
+ssh $SSH_OPTS $SSH_USER@`hostname` echo -n &
 wait
 
 # Try to SSH to each cluster node to approve their key. Since some nodes may
@@ -75,7 +75,7 @@ while [ "e$TODO" != "e" ] && [ $TRIES -lt 4 ] ; do
   NEW_TODO=
   for slave in $TODO; do
     echo $slave
-    ssh $SSH_OPTS $slave echo -n
+    ssh $SSH_OPTS $SSH_USER@$slave echo -n
     if [ $? != 0 ] ; then
         NEW_TODO="$NEW_TODO $slave"
     fi
@@ -93,8 +93,8 @@ done
 echo "RSYNC'ing /root/spark-ec2 to other cluster nodes..."
 for node in $SLAVES $OTHER_MASTERS; do
   echo $node
-  rsync -e "ssh $SSH_OPTS" -az /root/spark-ec2 $node:/root &
-  scp $SSH_OPTS ~/.ssh/id_rsa $node:.ssh &
+  rsync --rsync-path='sudo rsync' -e "ssh $SSH_OPTS" -az /root/spark-ec2 $SSH_USER@$node:/root &
+  scp $SSH_OPTS ~/.ssh/id_rsa $SSH_USER@$node:.ssh &
   sleep 0.3
 done
 wait
@@ -104,7 +104,7 @@ wait
 echo "Running slave setup script on other cluster nodes..."
 for node in $SLAVES $OTHER_MASTERS; do
   echo $node
-  ssh -t -t $SSH_OPTS root@$node "spark-ec2/setup-slave.sh" & sleep 0.3
+  ssh -t -t $SSH_OPTS $SSH_USER@$node "sudo spark-ec2/setup-slave.sh" & sleep 0.3
 done
 wait
 

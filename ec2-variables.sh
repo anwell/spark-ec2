@@ -20,3 +20,4 @@ export MODULES="ephemeral-hdfs mesos"
 # Other variables used in scripts
 # export MESOS_SPARK_LOCAL_DIRS - used to set local directories for spark
 # export MESOS_DOWNLOAD_METHOD  - used to control how mesos is built
+export SSH_USER=""

@@ -1,3 +1,5 @@
+This repository has been modified to work with a custom AMI that was not created by Apache or Spark. This particular AMI does not permit passwordless root login but does allow a user denoted with `$SSH_USER` to passwordlessly `sudo`.
+
 spark-ec2
 =========
 
