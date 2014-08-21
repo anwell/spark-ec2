@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# Make sure we are in the spark-ec2 directory
-cd /root/spark-ec2
+source ~/spark-ec2/ec2-variables.sh
 
-source ec2-variables.sh
+# Make sure we are in the spark-ec2 directory
+cd /home/$SSH_USER/spark-ec2
 
 # Set hostname based on EC2 private DNS name, so that it is set correctly
 # even if the instance is restarted with a different private DNS name
@@ -69,10 +69,10 @@ chmod -R a+w /mnt*
 
 # Remove ~/.ssh/known_hosts because it gets polluted as you start/stop many
 # clusters (new machines tend to come up under old hostnames)
-rm -f /root/.ssh/known_hosts
+rm -f /home/$SSH_USER/.ssh/known_hosts
 
 # Create swap space on /mnt
-/root/spark-ec2/create-swap.sh $SWAP_MB
+bash -x /home/$SSH_USER/spark-ec2/create-swap.sh $SWAP_MB
 
 # Allow memory to be over committed. Helps in pyspark where we fork
 echo 1 > /proc/sys/vm/overcommit_memory
